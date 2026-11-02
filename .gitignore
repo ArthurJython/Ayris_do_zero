@@ -1,0 +1,77 @@
+
+# ==============================
+# Python e ambientes virtuais
+# ==============================
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ==============================
+# Configurações privadas
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Pesos e checkpoints
+# ==============================
+/checkpoints/training/
+/checkpoints/finetuning/
+/checkpoints/pretraining/
+/checkpoints/releases/
+
+*.pt
+*.pth
+*.safetensors
+*.gguf
+*.onnx
+
+# ==============================
+# Datasets e corpora
+# ==============================
+/data_0.parquet
+/data/raw/
+/data/interim/
+/data/processed/
+/data/splits/
+/data/tokenized/
+/data/datasets/
+
+/data/chat/conversations.txt
+/data/chat/raw/
+/data/chat/splits/
+/data/chat/tokenized/
+
+*.parquet
+*.arrow
+
+# ==============================
+# Experimentos gerados
+# ==============================
+/experiments/logs/
+/experiments/runs/
+/experiments/results/
+
+*.log
+*.tmp
+*.bak
+*.swp
+
+# ==============================
+# Sistema operacional
+# ==============================
+.DS_Store
+
+# Configurações locais do editor
+.vscode/
+.idea/
+
+/arvore_projeto.txt
+/busca_tokenizacao.txt

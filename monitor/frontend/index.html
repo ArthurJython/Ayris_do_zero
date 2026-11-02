@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Painel local de acompanhamento do treinamento da AYRIS.">
+<title>AYRIS — Monitor de Treinamento</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg:#000; --fg:#fff; --g2:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.08); --border-strong:rgba(255,255,255,.16);
+    --txt-dim:rgba(255,255,255,.55); --txt-mid:rgba(255,255,255,.78);
+    --radius:14px;
+    --font-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --font-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --font-logo:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  }
+  html,body { background:var(--bg); color:var(--fg); font-family:var(--font-ui); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+  body { position:relative; padding:18px; }
+  .bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size:42px 42px; pointer-events:none; z-index:0; -webkit-mask-image:radial-gradient(ellipse 100% 80% at 50% 30%,black 20%,transparent 85%); mask-image:radial-gradient(ellipse 100% 80% at 50% 30%,black 20%,transparent 85%); }
+  .bg-glow { position:fixed; inset:0; background:radial-gradient(circle at 15% -5%,rgba(255,255,255,.07),transparent 45%),radial-gradient(circle at 85% 105%,rgba(255,255,255,.04),transparent 45%); pointer-events:none; z-index:0; }
+  .app { position:relative; z-index:1; max-width:1400px; margin:0 auto; display:flex; flex-direction:column; gap:18px; }
+  .topbar { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; padding:8px 4px 22px; border-bottom:1px solid var(--border); }
+  .brand { display:flex; flex-direction:column; gap:10px; }
+  .logo-3d { font-family:var(--font-logo); font-weight:900; font-size:clamp(2.2rem,8vw,4.4rem); letter-spacing:.14em; line-height:1; color:#fff; transform:perspective(900px) rotateX(12deg) rotateY(-8deg); transform-origin:left center; text-shadow:1px 1px 0 #dcdcdc,2px 2px 0 #cdcdcd,3px 3px 0 #bfbfbf,4px 4px 0 #b1b1b1,5px 5px 0 #a3a3a3,6px 6px 0 #959595,7px 7px 0 #878787,8px 8px 0 #7a7a7a,9px 9px 0 #6d6d6d,10px 10px 0 #606060,11px 11px 0 #535353,12px 12px 0 #464646,13px 13px 0 #3a3a3a,14px 14px 0 #2f2f2f,15px 15px 0 #242424,16px 16px 0 #1a1a1a,17px 17px 0 #111,22px 22px 40px #000; animation:logoFloat 7s ease-in-out infinite; }
+  @keyframes logoFloat { 0%,100%{transform:perspective(900px) rotateX(12deg) rotateY(-8deg) translateY(0)} 50%{transform:perspective(900px) rotateX(12deg) rotateY(-8deg) translateY(-2px)} }
+  .brand-meta { display:flex; gap:12px; align-items:center; font-size:.68rem; letter-spacing:.22em; color:var(--txt-dim); text-transform:uppercase; padding-left:3px; }
+  .brand-sub { color:var(--fg); font-weight:600; }
+  .brand-run { padding:3px 8px; border:1px solid var(--border); border-radius:4px; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.08em; text-transform:none; color:var(--txt-mid); }
+  .status-group { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .status-pill { display:flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.03); backdrop-filter:blur(12px); font-family:var(--font-mono); font-size:.68rem; letter-spacing:.12em; color:var(--txt-mid); }
+  .status-pill .dot { width:8px; height:8px; border-radius:50%; background:#777; }
+  .clock { font-family:var(--font-mono); font-size:.72rem; letter-spacing:.12em; color:var(--txt-dim); }
+  .grid { display:grid; grid-template-columns:1fr; gap:14px; }
+  .card { background:var(--g2); backdrop-filter:blur(22px) saturate(120%); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04); display:flex; flex-direction:column; gap:16px; min-height:0; }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent); pointer-events:none; }
+  .card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .card-title { font-size:.66rem; letter-spacing:.24em; color:var(--txt-dim); font-weight:600; }
+  .card-badge { font-family:var(--font-mono); font-size:.6rem; letter-spacing:.1em; padding:3px 8px; border:1px solid var(--border); border-radius:4px; color:var(--txt-mid); background:rgba(255,255,255,.02); white-space:nowrap; }
+  .progress-big { display:flex; flex-direction:column; gap:4px; }
+  .progress-num { font-family:var(--font-logo); font-size:clamp(2.6rem,7vw,4rem); font-weight:800; letter-spacing:-.02em; line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+  .progress-num .pct { font-size:.45em; color:var(--txt-dim); margin-left:4px; font-weight:600; }
+  .progress-sub { font-family:var(--font-mono); font-size:.8rem; color:var(--txt-dim); letter-spacing:.05em; }
+  .progress-bar { height:4px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+  .progress-fill { height:100%; width:12.75%; background:linear-gradient(90deg,rgba(255,255,255,.55),#fff); border-radius:999px; box-shadow:0 0 14px rgba(255,255,255,.35); }
+  .progress-meta { display:flex; gap:24px; justify-content:space-between; flex-wrap:wrap; }
+  .progress-meta>div { display:flex; flex-direction:column; gap:3px; }
+  .label { font-size:.6rem; letter-spacing:.18em; color:var(--txt-dim); text-transform:uppercase; font-weight:600; }
+  .value { font-family:var(--font-mono); font-size:.85rem; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .metrics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 10px; }
+  .metric { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .m-label { font-size:.58rem; letter-spacing:.12em; color:var(--txt-dim); font-weight:600; }
+  .m-value { font-family:var(--font-mono); font-size:1.12rem; color:#fff; letter-spacing:-.01em; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m-note { color:var(--txt-dim); font-family:var(--font-mono); font-size:.62rem; line-height:1.5; }
+  .hw-list { display:flex; flex-direction:column; gap:14px; }
+  .hw-item { display:flex; flex-direction:column; gap:6px; }
+  .hw-label { display:flex; justify-content:space-between; gap:12px; font-size:.62rem; letter-spacing:.13em; color:var(--txt-dim); font-weight:600; }
+  .hw-label span:last-child { font-family:var(--font-mono); color:var(--fg); letter-spacing:.02em; font-weight:500; }
+  .hw-bar { height:2px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+  .hw-fill { height:100%; width:0; background:rgba(255,255,255,.72); border-radius:999px; }
+  .chart-placeholder { height:160px; display:flex; align-items:center; justify-content:center; border-top:1px solid rgba(255,255,255,.04); color:var(--txt-dim); font-family:var(--font-mono); font-size:.68rem; letter-spacing:.08em; text-align:center; }
+  .ckpt-list { display:flex; flex-direction:column; gap:1px; background:var(--border); border-radius:8px; overflow:hidden; }
+  .ckpt-item { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; padding:12px 16px; background:#050505; font-size:.8rem; }
+  .ckpt-badge { font-family:var(--font-mono); font-size:.56rem; letter-spacing:.12em; padding:3px 6px; border-radius:3px; border:1px solid var(--border-strong); color:var(--txt-mid); white-space:nowrap; }
+  .ckpt-badge.best { background:#fff; color:#000; border-color:#fff; }
+  .ckpt-body { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .ckpt-id { font-family:var(--font-mono); font-size:.75rem; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ckpt-step,.ckpt-time { font-family:var(--font-mono); font-size:.66rem; color:var(--txt-dim); }
+  .notice { border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--txt-dim); font-size:.72rem; line-height:1.6; }
+  .notice strong { color:var(--txt-mid); font-weight:600; }
+  .footer { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:22px 4px 10px; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.1em; color:var(--txt-dim); border-top:1px solid var(--border); text-transform:uppercase; }
+  @media(min-width:640px){ body{padding:26px}.grid{grid-template-columns:repeat(2,1fr)}.card-progress,.card-hw,.card-loss,.card-lr,.card-ckpt{grid-column:span 2}.ckpt-item{grid-template-columns:auto 1fr auto auto} }
+  @media(min-width:960px){ body{padding:32px}.grid{grid-template-columns:repeat(3,1fr)}.card-progress{grid-column:span 2}.card-metrics{grid-column:span 1}.card-perf{grid-column:span 1}.card-hw{grid-column:span 2}.card-loss{grid-column:span 2}.card-lr{grid-column:span 1}.card-ckpt{grid-column:span 3} }
+  @media(max-width:420px){.logo-3d{letter-spacing:.1em}.m-value{font-size:1rem}.progress-num{font-size:2.4rem}.brand-meta{font-size:.6rem;gap:8px;flex-wrap:wrap}.footer{font-size:.58rem}}
+  @media(prefers-reduced-motion:reduce){.logo-3d{animation:none}}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div><div class="bg-glow"></div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-3d">AYRIS</div>
+      <div class="brand-meta"><span class="brand-sub">TRAINING MONITOR</span><span class="brand-run">run · fase-04-100k</span></div>
+    </div>
+    <div class="status-group">
+      <div class="status-pill"><span class="dot"></span><span>VISUALIZAÇÃO ESTÁTICA</span></div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card card-progress">
+      <div class="card-head"><span class="card-title">PROGRESSO</span><span class="card-badge">ÉPOCA <span>1</span></span></div>
+      <div class="progress-big">
+        <div class="progress-num">12.75<span class="pct">%</span></div>
+        <div class="progress-sub">12.750 / 100.000 steps</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="progress-meta">
+        <div><span class="label">POSIÇÃO NO DATASET</span><span class="value">38.250 / 205.482</span></div>
+        <div><span class="label">BATCH · CONTEXTO</span><span class="value">3 · 512 tokens</span></div>
+      </div>
+    </section>
+
+    <section class="card card-metrics">
+      <div class="card-head"><span class="card-title">MÉTRICAS</span><span class="card-badge">ÚLTIMO REGISTRO</span></div>
+      <div class="metrics-grid">
+        <div class="metric"><span class="m-label">TRAIN LOSS</span><span class="m-value">4.13635</span></div>
+        <div class="metric"><span class="m-label">VAL LOSS</span><span class="m-value">—</span></div>
+        <div class="metric"><span class="m-label">VAL PPL</span><span class="m-value">87.608</span><span class="m-note">medida no passo 10.000</span></div>
+        <div class="metric"><span class="m-label">LEARNING RATE</span><span class="m-value">9.691e-5</span></div>
+        <div class="metric"><span class="m-label">GRAD PRE-CLIP</span><span class="m-value">2.64317</span></div>
+        <div class="metric"><span class="m-label">GRAD POST-CLIP</span><span class="m-value">1.00000</span></div>
+      </div>
+    </section>
+
+    <section class="card card-perf">
+      <div class="card-head"><span class="card-title">DESEMPENHO</span><span class="card-badge">ÚLTIMO REGISTRO</span></div>
+      <div class="metrics-grid">
+        <div class="metric"><span class="m-label">STEPS / S</span><span class="m-value">1.014</span></div>
+        <div class="metric"><span class="m-label">TOKENS / S</span><span class="m-value">1.558</span></div>
+        <div class="metric"><span class="m-label">TEMPO DECORRIDO</span><span class="m-value">03:29:29</span></div>
+        <div class="metric"><span class="m-label">ETA APROXIMADO</span><span class="m-value">23:53:35</span></div>
+      </div>
+    </section>
+
+    <section class="card card-hw">
+      <div class="card-head"><span class="card-title">HARDWARE</span><span class="card-badge" id="hardwareStatus">CONECTANDO</span></div>
+      <div class="hw-list">
+        <div class="hw-item"><div class="hw-label"><span>CPU TEMP</span><span id="cpuTempVal">—</span></div><div class="hw-bar"><div class="hw-fill" id="cpuTempBar" style="width:0%"></div></div></div>
+        <div class="hw-item"><div class="hw-label"><span>CPU USO · SISTEMA</span><span id="cpuVal">—</span></div><div class="hw-bar"><div class="hw-fill" id="cpuBar" style="width:0%"></div></div></div>
+        <div class="hw-item"><div class="hw-label"><span>GPU USO</span><span>NÃO UTILIZADA</span></div><div class="hw-bar"><div class="hw-fill" style="width:0%"></div></div></div>
+        <div class="hw-item"><div class="hw-label"><span>RAM</span><span id="ramVal">—</span></div><div class="hw-bar"><div class="hw-fill" id="ramBar" style="width:0%"></div></div></div>
+        <div class="hw-item"><div class="hw-label"><span>DISCO · /</span><span id="diskVal">—</span></div><div class="hw-bar"><div class="hw-fill" id="diskBar" style="width:0%"></div></div></div>
+      </div>
+      <p class="m-note" id="hardwareNote">Aguardando leitura local do Linux.</p>
+    </section>
+
+    <section class="card card-loss">
+      <div class="card-head"><span class="card-title">LOSS · HISTÓRICO</span><span class="card-badge">TRAIN / VAL</span></div>
+      <div class="chart-placeholder">HISTÓRICO DE LOSS AINDA NÃO DISPONÍVEL</div>
+    </section>
+
+    <section class="card card-lr">
+      <div class="card-head"><span class="card-title">LEARNING RATE</span><span class="card-badge">VALOR ATUAL</span></div>
+      <div class="chart-placeholder">CURVA COMPLETA DO SCHEDULER NÃO DISPONÍVEL</div>
+    </section>
+
+    <section class="card card-ckpt">
+      <div class="card-head"><span class="card-title">CHECKPOINTS</span><span class="card-badge">NÃO CONSULTADOS</span></div>
+      <div class="notice">A lista de checkpoints foi deixada vazia de propósito. Esta página não consulta o diretório de treinamento e não deve inventar arquivos ou etapas salvas.</div>
+    </section>
+
+    <section class="notice" style="grid-column:1/-1">
+      <strong>Modo estático:</strong> os números acima são um retrato do último log informado (passo 12.750). Esta página não está conectada ao treinador, não altera arquivos do modelo e não controla o processo. Para atualizar os números, edite os valores no HTML; conexão automática exige uma integração posterior.
+    </section>
+  </main>
+
+  <footer class="footer"><span>AYRIS MONITOR v0.2 · HARDWARE AO VIVO</span><span>LEITURA LOCAL · TREINADOR INDEPENDENTE</span></footer>
+</div>
+<script>
+(() => {
+  "use strict";
+  const clock = document.getElementById("clock");
+  function updateClock() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    clock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  updateClock();
+  window.setInterval(updateClock, 1000);
+
+  // Leitura somente de hardware via API local; não se conecta ao treinador.
+  const hardwareStatus = document.getElementById("hardwareStatus");
+  const hardwareNote = document.getElementById("hardwareNote");
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  const setBar = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.style.width = `${Math.max(0, Math.min(100, Number(value) || 0))}%`;
+  };
+
+  async function updateHardware() {
+    try {
+      const response = await fetch("/api/hardware", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const d = await response.json();
+
+      hardwareStatus.textContent = "AO VIVO";
+      hardwareStatus.classList.add("live");
+
+      if (d.cpu_temp_c == null) {
+        setText("cpuTempVal", "NÃO DISPONÍVEL");
+        setBar("cpuTempBar", 0);
+      } else {
+        setText("cpuTempVal", `${d.cpu_temp_c.toFixed(1)} °C`);
+        setBar("cpuTempBar", d.cpu_temp_c);
+      }
+
+      if (d.cpu_percent == null) {
+        setText("cpuVal", "—");
+        setBar("cpuBar", 0);
+      } else {
+        setText("cpuVal", `${d.cpu_percent.toFixed(1)}%`);
+        setBar("cpuBar", d.cpu_percent);
+      }
+
+      if (d.ram_used_gb != null && d.ram_total_gb != null) {
+        setText("ramVal", `${d.ram_used_gb.toFixed(2)} / ${d.ram_total_gb.toFixed(2)} GB`);
+        setBar("ramBar", d.ram_percent);
+      }
+      if (d.disk_used_gb != null && d.disk_total_gb != null) {
+        setText("diskVal", `${d.disk_used_gb.toFixed(1)} / ${d.disk_total_gb.toFixed(1)} GB`);
+        setBar("diskBar", d.disk_percent);
+      }
+
+      hardwareNote.textContent = d.cpu_temp_source
+        ? `Temperatura: ${d.cpu_temp_source}. CPU: uso total do sistema. Atualização a cada 2 s.`
+        : "CPU/RAM/disco ao vivo. Sensor de temperatura não foi exposto pelo kernel; verifique lm-sensors.";
+    } catch (error) {
+      hardwareStatus.textContent = "SEM CONEXÃO";
+      hardwareStatus.classList.remove("live");
+      hardwareNote.textContent = "Não foi possível acessar /api/hardware. Abra esta página pelo servidor monitor_server.py.";
+    }
+  }
+
+  updateHardware();
+  window.setInterval(updateHardware, 2000);
+})();
+</script>
+</body>
+</html>

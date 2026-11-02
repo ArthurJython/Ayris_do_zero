@@ -1,0 +1,33 @@
+{
+  "name": "AYRIS",
+  "algorithm": "Byte-Level BPE",
+  "tokenizers_version": "0.23.2",
+  "vocab_size": 4096,
+  "requested_vocab_size": 4096,
+  "min_frequency": 2,
+  "normalization": "NFC",
+  "pre_tokenizer": "ByteLevel",
+  "decoder": "ByteLevel",
+  "initial_alphabet_size": 256,
+  "special_tokens": [
+    "<PAD>",
+    "<UNK>",
+    "<BOS>",
+    "<EOS>",
+    "<SYS>",
+    "<USR>",
+    "<AST>"
+  ],
+  "special_token_ids": {
+    "<PAD>": 0,
+    "<UNK>": 1,
+    "<BOS>": 2,
+    "<EOS>": 3,
+    "<SYS>": 4,
+    "<USR>": 5,
+    "<AST>": 6
+  },
+  "training_dataset": "data/splits/train.parquet",
+  "training_rows": 26226,
+  "batch_size": 128
+}
