@@ -691,33 +691,37 @@ find checkpoints/training -maxdepth 4 -type f -printf '%p %s bytes\n'
 
 ---
 
-## 13. Instruções para retomar o projeto em outra conversa
 
-Ao continuar o desenvolvimento:
+## 13. Procedimentos para desenvolvimento
 
-1. Ler este README e confirmar se ele ainda corresponde ao repositório local.
-2. Inspecionar os arquivos reais antes de presumir que o código coincide com a documentação.
-3. Confirmar os checkpoints:
+Antes de realizar alterações estruturais no projeto:
 
-   ```bash
-   find checkpoints/training -maxdepth 4 -type f -printf '%p %s bytes\n'
-   ```
+1. Consultar a documentação da arquitetura atual.
+2. Verificar os arquivos e módulos existentes.
+3. Confirmar o estado dos checkpoints.
+4. Executar os testes automatizados.
+5. Preservar os checkpoints anteriores antes de iniciar novos experimentos.
+6. Validar alterações em etapas antes de iniciar treinamentos prolongados.
 
-4. Confirmar os testes:
+### Verificação do ambiente
 
-   ```bash
-   python -m unittest discover -s tests -p "test_*.py" -v
-   ```
+```bash
+python --version
+python -c "import torch; print(torch.__version__)"
+```
 
-5. Confirmar o pipeline de chat:
+### Verificação dos testes
 
-   ```bash
-   python -m src.data.prepare_chat_dataset
-   ```
+```bash
+python -m unittest discover -s tests -p "test_*.py" -v
+```
 
-6. Não refazer tokenizer, embedding, RoPE, atenção ou Transformer sem evidência de erro.
-7. Preservar os checkpoints literários e executar o fine-tuning em um `run-name` separado.
-8. Fazer alterações pequenas: fornecer o arquivo completo, executar um teste curto e só então iniciar treinamento mais longo.
-9. Distinguir resultados efetivamente observados de hipóteses e etapas planejadas.
+### Verificação dos checkpoints
 
-O usuário prefere instruções diretas em português brasileiro, comandos completos e validação por etapas. Normalmente executa os comandos localmente e retorna as saídas para análise.
+```bash
+find checkpoints/training -maxdepth 4 -type f \
+  -printf '%p %s bytes\n'
+```
+
+A documentação deve ser atualizada conforme novas funcionalidades forem implementadas e validadas.
+
