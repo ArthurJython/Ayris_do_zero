@@ -540,17 +540,31 @@ No pré-treinamento literário, a Cross Entropy é calculada sobre todos os toke
 
 Menor perplexity indica maior probabilidade média atribuída aos alvos avaliados. Só compare valores diretamente quando tokenizer, corpus, máscara e protocolo de avaliação forem compatíveis. A PPL do corpus literário não deve ser comparada diretamente à PPL do dataset conversacional.
 
-### Gradient clipping
+
+### Gradiente e Gradient Clipping
+
+A norma L2 mede a magnitude total do gradiente:
 
 \[
-\lVert g\rVert_2=\sqrt{\sum_j g_j^2}
+\lVert g \rVert_2 = \sqrt{\sum_j g_j^2}
 \]
+
+O Gradient Clipping limita a norma do gradiente a um valor máximo \(c\):
 
 \[
-g'=g\cdot\min\left(1,\frac{c}{\lVert g\rVert_2}\right)
+g' = g \cdot \min\left(1,\frac{c}{\lVert g \rVert_2}\right)
 \]
 
-O limite atual é `c = 1.0`. A norma anterior ao clipping é registrada separadamente da norma posterior.
+Na AYRIS, o limite utilizado é:
+
+\[
+c = 1.0
+\]
+
+Quando a norma do gradiente ultrapassa esse limite, seus valores são ajustados proporcionalmente. Caso contrário, o gradiente permanece inalterado.
+
+O objetivo é evitar atualizações excessivamente grandes durante o treinamento e melhorar a estabilidade da otimização.
+
 
 ### AdamW
 
