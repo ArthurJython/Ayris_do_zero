@@ -526,26 +526,27 @@ Não confundir fluência, personalidade ou capacidade de manter turnos com conhe
 
 No pré-treinamento literário, a Cross Entropy é calculada sobre todos os tokens-alvo. No fine-tuning conversacional, a mesma métrica é calculada apenas nas posições selecionadas pela máscara de loss.
 
-$$
-\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\log p_{\theta}(y_i \mid x_{<i})
-$$
+```math
+\mathcal{L}_{CE} = -\frac{1}{N}\sum_{t=1}^{T}m_t\log p_{\theta}(y_t \mid x_1,\ldots,x_{t-1})
+```
 
 Onde:
 
-- $N$ representa a quantidade de posições efetivamente incluídas na loss.
-- $y_i$ representa o token-alvo.
-- $p_{\theta}$ representa a probabilidade prevista pelo modelo.
-- $x_{<i}$ representa o contexto anterior ao token-alvo.
+- `N` representa a quantidade de tokens efetivamente incluídos na loss.
+- `T` representa o comprimento total da sequência.
+- `m_t` representa a máscara binária: 1 para posições incluídas na loss e 0 para posições ignoradas.
+- `y_t` representa o token-alvo.
+- `p_theta` representa a distribuição de probabilidades prevista pelo modelo.
 
-No treinador conversacional, $N$ corresponde à quantidade de tokens das respostas da AYRIS selecionados pela máscara, incluindo o token `<EOS>` final conforme a política atual.
+No treinador conversacional, a máscara seleciona os tokens das respostas da AYRIS, incluindo o token `<EOS>` final.
 
 ### Perplexity
 
 A Perplexity é calculada a partir da Cross Entropy média:
 
-$$
-\mathrm{PPL} = e^{\mathcal{L}}
-$$
+```math
+\mathrm{PPL} = \exp(\mathcal{L}_{CE})
+```
 
 Menor perplexity indica maior probabilidade média atribuída aos tokens-alvo avaliados.
 
