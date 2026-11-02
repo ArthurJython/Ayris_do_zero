@@ -524,47 +524,58 @@ Não confundir fluência, personalidade ou capacidade de manter turnos com conhe
 
 ### Cross Entropy
 
-No pré-treinamento literário, a Cross Entropy é calculada sobre todos os tokens-alvo. No fine-tuning de chat, a mesma métrica é calculada apenas nas posições selecionadas pela máscara.
+No pré-treinamento literário, a Cross Entropy é calculada sobre todos os tokens-alvo. No fine-tuning conversacional, a mesma métrica é calculada apenas nas posições selecionadas pela máscara de loss.
 
-\[
-\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\log p_\theta(y_i\mid x_{<i})
-\]
+$$
+\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\log p_{\theta}(y_i \mid x_{<i})
+$$
 
-`N` é a quantidade de posições efetivamente incluídas na loss. No treinador conversacional, `N` corresponde aos tokens de resposta selecionados pela máscara, incluindo o EOS final conforme a política atual.
+Onde:
+
+- $N$ representa a quantidade de posições efetivamente incluídas na loss.
+- $y_i$ representa o token-alvo.
+- $p_{\theta}$ representa a probabilidade prevista pelo modelo.
+- $x_{<i}$ representa o contexto anterior ao token-alvo.
+
+No treinador conversacional, $N$ corresponde à quantidade de tokens das respostas da AYRIS selecionados pela máscara, incluindo o token `<EOS>` final conforme a política atual.
 
 ### Perplexity
 
-\[
-\mathrm{PPL}=e^{\mathcal{L}}
-\]
+A Perplexity é calculada a partir da Cross Entropy média:
 
-Menor perplexity indica maior probabilidade média atribuída aos alvos avaliados. Só compare valores diretamente quando tokenizer, corpus, máscara e protocolo de avaliação forem compatíveis. A PPL do corpus literário não deve ser comparada diretamente à PPL do dataset conversacional.
+$$
+\mathrm{PPL} = e^{\mathcal{L}}
+$$
 
+Menor perplexity indica maior probabilidade média atribuída aos tokens-alvo avaliados.
+
+Os valores só devem ser comparados diretamente quando o tokenizer, o corpus, a máscara e o protocolo de avaliação forem compatíveis.
+
+Portanto, a Perplexity do pré-treinamento literário não deve ser comparada diretamente à Perplexity do fine-tuning conversacional.
 
 ### Gradiente e Gradient Clipping
 
 A norma L2 mede a magnitude total do gradiente:
 
-\[
+```math
 \lVert g \rVert_2 = \sqrt{\sum_j g_j^2}
-\]
+```
 
 O Gradient Clipping limita a norma do gradiente a um valor máximo \(c\):
 
-\[
+```math
 g' = g \cdot \min\left(1,\frac{c}{\lVert g \rVert_2}\right)
-\]
+```
 
 Na AYRIS, o limite utilizado é:
 
-\[
+```math
 c = 1.0
-\]
+```
 
 Quando a norma do gradiente ultrapassa esse limite, seus valores são ajustados proporcionalmente. Caso contrário, o gradiente permanece inalterado.
 
 O objetivo é evitar atualizações excessivamente grandes durante o treinamento e melhorar a estabilidade da otimização.
-
 
 ### AdamW
 
